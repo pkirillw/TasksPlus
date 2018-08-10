@@ -1,0 +1,49 @@
+.pipeline {
+    margin: 10px;
+}
+
+.pipeline-header {
+    padding: 10px 0;
+}
+
+.pipeline-body {
+    max-height: 80%;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.task {
+    margin: 15px 5px;
+    border-left: 5px solid;
+}
+
+.border_success {
+    border-left-color: #24a65c !important;
+}
+
+.border_danger {
+    border-left-color: #f2984a !important;
+}
+
+.border_warning {
+    border-left-color: #eb5757 !important;
+}
+
+.color_success {
+    color: #24a65c !important;
+}
+
+.color_danger {
+    color: #f2984a !important;
+}
+
+.color_warning {
+    color: #eb5757 !important;
+}
+
+body {
+    background-color: #f5f5f5;
+}
+.dropdown-toggle::after {
+    display:none !important;
+}
