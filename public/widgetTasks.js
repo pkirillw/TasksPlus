@@ -2,6 +2,8 @@ var TaskPlusLibrary = {};
 var TaskInfo = {};
 var leadInfo = {};
 var tempWidget = {};
+var rotation = 0;
+var timerId;
 TaskPlusLibrary.GenerateLeftArea = function (widget) {
 
     var html_data = '' +
@@ -11,8 +13,8 @@ TaskPlusLibrary.GenerateLeftArea = function (widget) {
         '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"' +
         '        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"' +
         '        crossorigin="anonymous"></script>' +
-        '<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/locales/bootstrap-datepicker.ru.min.js"></script>' +
         '<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>' +
+        '<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/locales/bootstrap-datepicker.ru.min.js"></script>' +
         '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker3.standalone.min.css" />' +
 
         '<meta charset="utf-8">\n' +
@@ -62,13 +64,19 @@ TaskPlusLibrary.GenerateLeftArea = function (widget) {
         '        text-align: center;' +
         '    }\n' +
         '</style>\n' +
-        '<div class="leftTasks_addTask" onclick="TaskPlusLibrary.addTask();">\n' +
-        '       <span style="color: #4d89ed;\n' +
+        '<div class="leftTasks_addTask" >\n' +
+        '       <span onclick="TaskPlusLibrary.addTask();" style="color: #4d89ed;\n' +
         '    text-transform: uppercase;\n' +
         '    font-weight: bold;">\n' +
         '           <img src="https://tasks.pkirillw.ru/public/images/outline-add-24px.svg" style="    margin: -6px 0px;">\n' +
         '           Добавить дело\n' +
-        '       </span>\n' +
+        '       </span>\
+                <span onclick="TaskPlusLibrary.getData();" style="\n' +
+        '    position: absolute;\n' +
+        '    right: 10px;\n' +
+        '">\n' +
+        '            <img src="https://tasks.pkirillw.ru/public/images/icon_reload.svg" id="leftTasks_iconReload" style="  width: 17px;">\n' +
+        '        </span>' +
         '    </div>' +
         '<div class="leftTasks_allTasks"></div>';
 
@@ -126,6 +134,7 @@ TaskPlusLibrary.renderTasks = function () {
             $(".leftTasks_allTasks").append(html_data);
         });
     }
+    clearInterval(timerId);
 }
 
 TaskPlusLibrary.showFullTask = function (id) {
@@ -136,7 +145,7 @@ TaskPlusLibrary.showFullTask = function (id) {
 TaskPlusLibrary.editTask = function (id) {
     var localTask = TaskInfo[id];
     data = '<div class="bootstrap">' +
-        '<h2 class="text-center">Редактирование дела ' + localTask.name + '</h2>' +
+        '<h2 class="text-center">Редактирование дела ' + localTask.number_request + '</h2>' +
         '<div class="form-group">\n' +
         '                        <label for="exampleInputEmail1">Воронка</label>\n' +
         '                        <select name="pipeline_id" class="form-control">';
@@ -201,7 +210,7 @@ TaskPlusLibrary.editTask = function (id) {
         '                       </div>\n' +
         '                    </div>\n' +
         '                    <div class="text-center">\n' +
-        '                        <button type="submit" class="btn btn-primary modal-body__close" onclick="" style="\n' +
+        '                        <button type="submit" class="btn btn-primary modal-body__close" onclick="TaskPlusLibrary.editTaskFunction(' + id + ')" style="\n' +
         '    position: inherit;\n' +
         '">Отправить</button>\n' +
         '                    </div>\n' +
@@ -215,6 +224,10 @@ TaskPlusLibrary.editTask = function (id) {
                 .html(data)
                 .trigger('modal:centrify')  //настраивает модальное окно
                 .append('<span class="modal-body__close"><span class="icon icon-modal-close"></span></span>');
+            $('#datetimepicker1').datepicker({
+                format: "dd.mm.yyyy",
+                language: "ru"
+            });
         },
         destroy: function () {
         }
@@ -222,12 +235,44 @@ TaskPlusLibrary.editTask = function (id) {
     console.log(id);
 };
 
+TaskPlusLibrary.editTaskFunction = function (id) {
+    clearInterval(timerId);
+    timerId = setInterval(function () {
+        rotation += 5;
+        TaskPlusLibrary.rotateSpinner(rotation);
+    }, 20);
+    var newTaskInfo = {
+        task_id: TaskInfo[id].id,
+        amo_id: TaskInfo[id].amo_id,
+        pipeline_id: $('[name="pipeline_id"]').val(),
+        type_id: $('[name="type_id"]').val(),
+        user_id: AMOCRM.data.current_card.user.id,
+        number_request: $('[name="number_request"]').val(),
+        position: 0,
+        status: 0,
+        complite_till: $('[name="complite_till"]').val(),
+        comment: $('[name="comment"]').val()
+    };
+    self.crm_post(
+        'https://tasks.pkirillw.ru//tasks/editAPI',
+        newTaskInfo,
+        function (data) {
+            console.log(data);
+            TaskPlusLibrary.getData();
+        },
+        'json',
+        function () {
+            alert('Error');
+        }
+    );
+    console.log(newTaskInfo);
+};
+
 TaskPlusLibrary.addTask = function () {
     leadInfo = {
         id: AMOCRM.data.current_card.id,
         name: $('[name="lead[NAME]"]').text()
     };
-    console.log(leadInfo);
     data = '<div class="bootstrap">' +
         '<h2 class="text-center">Создание "Дела" для сделки ' + leadInfo.name + '</h2>' +
         '<div class="form-group">\n' +
@@ -289,12 +334,17 @@ TaskPlusLibrary.addTask = function () {
 };
 
 TaskPlusLibrary.addTaskFunction = function () {
+    clearInterval(timerId);
+    timerId = setInterval(function () {
+        rotation += 5;
+        TaskPlusLibrary.rotateSpinner(rotation);
+    }, 20);
     var newTaskInfo = {
         amo_id: leadInfo.id,
         pipeline_id: $('[name="pipeline_id"]').val(),
         type_id: $('[name="type_id"]').val(),
         user_id: AMOCRM.data.current_card.user.id,
-        number_request: leadInfo.name,
+        number_request: $('[name="number_request"]').val(),
         position: 0,
         status: 0,
         complite_till: $('[name="complite_till"]').val(),
@@ -311,7 +361,7 @@ TaskPlusLibrary.addTaskFunction = function () {
         function () {
             alert('Error');
         }
-    )
+    );
     console.log(newTaskInfo);
 };
 
@@ -421,13 +471,26 @@ TaskPlusLibrary.endTaskFunction = function (id, indexTask) {
         });
 };
 
+
+TaskPlusLibrary.rotateSpinner = function (degrees) {
+    $('#leftTasks_iconReload').css({'transform': 'rotate(' + degrees + 'deg)'});
+};
+
+
 TaskPlusLibrary.getData = function () {
+    clearInterval(timerId);
+    timerId = setInterval(function () {
+        rotation += 5;
+        TaskPlusLibrary.rotateSpinner(rotation);
+    }, 20);
+
     TaskPlusLibrary.api(
         'https://tasks.pkirillw.ru/tasks/getLeadTask/' + AMOCRM.data.current_card.id,
         function (data) {
             TaskInfo = data;
             $(".leftTasks_allTasks").empty();
             TaskPlusLibrary.renderTasks();
+
         },
         function (data) {
 

@@ -32,7 +32,11 @@ Route::post('/tasks/changeText', 'TasksController@ChangeText');
 Route::post('/tasks/changeTimer', 'TasksController@ChangeTimer');
 Route::post('/tasks/changeStatus', 'TasksController@ChangeStatus');
 Route::post('/tasks/add', 'TasksController@Add');
+Route::post('/tasks/edit', 'TasksController@Edit');
+
 Route::post('/tasks/addAPI', 'TasksController@addTaskAPI');
+Route::post('/tasks/editAPI', 'TasksController@editTaskAPI');
+Route::get('/tasks/getTaskAPI/{id?}', 'TasksController@getTaskAPI');
 
 Route::get('/tasks/getLeadTask/{leadId?}', 'TasksController@GetLeadTask');
 

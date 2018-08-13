@@ -26,9 +26,37 @@ class TasksController
         $task = Tasks::where([['id', '=', $request->taskId]])->first();
         $task->pipeline_id = $request->newPipelineId;
         $task->save();
-        return redirect()->action(
-            'BoardController@Board', ['id' => $request->user_id]
-        );
+        return response()->json($task);
+        //return redirect()->action(
+        //    'BoardController@Board', ['id' => $request->user_id]
+        //);
+    }
+
+    public function getTaskAPI($id = 0)
+    {
+        $response = [];
+        $task = Tasks::where([['id', '=', $id]])->first();
+        if (!empty($task)) {
+
+            $temp = $task->toArray();
+
+            unset($temp['type_id']);
+            unset($temp['pipeline_id']);
+            $typeTask = Types::where([['id', '=', $task->type_id]])->first();
+            $temp['type'] = $typeTask->toArray();
+            $pipelineTask = Pipelines::where([['id', '=', $task->pipeline_id]])->first();
+            $temp['pipeline'] = $pipelineTask->toArray();
+            $temp['created_task_format'] = date('d.m.Y', $temp['created_task']);
+            $temp['complite_till_format'] = date('d.m.Y', $temp['complite_till']);
+            if ($temp['complite_till'] < time()) {
+                $temp['flag_expired'] = true;
+            } else {
+                $temp['flag_expired'] = false;
+            }
+            $response = $temp;
+        }
+        return response()->json($response);
+
     }
 
     public function addTaskAPI(Request $request)
@@ -46,6 +74,23 @@ class TasksController
         $newTask->status = 0;
         $newTask->save();
         return response()->json($newTask->toArray());
+    }
+
+    public function editTaskAPI(Request $request)
+    {
+        $task = Tasks::where([['id', '=', $request->task_id]])->first();
+        $task->pipeline_id = $request->pipeline_id;
+        $task->type_id = $request->type_id;
+        $task->user_id = $request->user_id;
+        $task->amo_id = $request->amo_id;
+        $task->number_request = $request->number_request;
+        $task->position = $request->position;
+        $task->comment = $request->comment;
+        $task->created_task = time();
+        $task->complite_till = \DateTime::createFromFormat('d.m.Y', $request->complite_till)->format('U');
+        $task->status = 0;
+        $task->save();
+        return response()->json($task->toArray());
     }
 
     public function endTask($taskId)
@@ -104,12 +149,31 @@ class TasksController
         $newTask->user_id = $request->user_id;
         $newTask->amo_id = $request->lead_id;
         $newTask->number_request = $request->number_request;
-        $newTask->position = $request->position;
+        $newTask->position = 0;
         $newTask->comment = $request->comment;
         $newTask->created_task = time();
-        $newTask->complite_till = \DateTime::createFromFormat('d.m.Y H:i', $request->complite_till)->format('U');
+        $newTask->complite_till = \DateTime::createFromFormat('d.m.Y', $request->complite_till)->format('U');
         $newTask->status = 0;
         $newTask->save();
+        return redirect()->action(
+            'BoardController@Board', ['id' => $request->user_id]
+        );
+        dd($request->all());
+    }
+    public function edit(Request $request)
+    {
+
+        $task = Tasks::where([['id', '=', $request->task_id]])->first();
+        $task->pipeline_id = $request->pipeline_id;
+        $task->type_id = $request->type_id;
+        $task->user_id = $request->user_id;
+        $task->number_request = $request->number_request;
+        $task->position = 0;
+        $task->comment = $request->comment;
+        $task->created_task = time();
+        $task->complite_till = \DateTime::createFromFormat('d.m.Y', $request->complite_till)->format('U');
+        $task->status = 0;
+        $task->save();
         return redirect()->action(
             'BoardController@Board', ['id' => $request->user_id]
         );
@@ -130,8 +194,8 @@ class TasksController
                 $temp['type'] = $typeTask->toArray();
                 $pipelineTask = Pipelines::where([['id', '=', $item->pipeline_id]])->first();
                 $temp['pipeline'] = $pipelineTask->toArray();
-                $temp['created_task_format'] = date('d.m.Y H:i:s', $temp['created_task']);
-                $temp['complite_till_format'] = date('d.m.Y H:i:s', $temp['complite_till']);
+                $temp['created_task_format'] = date('d.m.Y', $temp['created_task']);
+                $temp['complite_till_format'] = date('d.m.Y', $temp['complite_till']);
                 if ($temp['complite_till'] < time()) {
                     $temp['flag_expired'] = true;
                 } else {

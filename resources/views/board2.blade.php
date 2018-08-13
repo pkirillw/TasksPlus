@@ -16,15 +16,15 @@
         integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
         crossorigin="anonymous"></script>
 <script src="https://tasks.pkirillw.ru/public/js/kanban.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/locale/ru.js"></script>
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css"/>
+
 <link rel="manifest" href="/public/manifest.json"/>
 <script charset="UTF-8"
         src="//cdn.sendpulse.com/9dae6d62c816560a842268bde2cd317d/js/push/c0d74035efdcf15c37ae4d8cc483f654_1.js"
         async></script>
-<script src="https://tasks.pkirillw.ru/public/js/bootstrap-datetimepicker.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/locales/bootstrap-datepicker.ru.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker3.standalone.min.css" />
 <meta name="csrf-token" content="{{ csrf_token() }}"/>
 <meta name="user_id" content="{{ $user['id'] }}"/>
 
@@ -118,7 +118,8 @@
                                     </h5>
                                     <h6 class="card-subtitle mb-2 text-muted">
                                         @if($task['flag_expired'] == true)
-                                            <img src="https://tasks.pkirillw.ru/public/images/icon_expired.svg" width="18px" style="">
+                                            <img src="https://tasks.pkirillw.ru/public/images/icon_expired.svg"
+                                                 width="18px" style="">
                                         @endif
                                         ({{date('d.m.Y H:i:s', $task['complite_till'])}})
                                     </h6>
@@ -132,20 +133,16 @@
                                               onblur="saveText({{$task['id']}});">{{$task['comment']}}</textarea> !-->
                                     <div class="row text-center" style="padding-top: 15px ; ">
                                         <div class="buttons" style="font-size: 26px; margin: 0 auto;">
-                                            <span data-toggle="tooltip" data-placement="top" title="Изменить таймер">
-                                                <ion-icon name="ios-timer" aria-hidden="true"
-                                                          onclick="changeTimerTaskId({{$task['id']}})"
-                                                          data-toggle="modal"
-                                                          data-target="#changeTimer"></ion-icon>
-                                            </span>
                                             <span data-toggle="tooltip" data-placement="top" title="Изменить задачу">
-                                            <ion-icon name="ios-document" aria-hidden="true" data-toggle="modal"
-                                                      data-target="#changeStatus"
-                                                      onclick="changeStatusTaskId({{$task['id']}})"></ion-icon>
+                                                <img src="https://tasks.pkirillw.ru/public/images/icon_edit.svg"
+                                                     width="24px" aria-hidden="true" data-toggle="modal"
+                                                     data-target="#changeStatus"
+                                                     onclick="editTask({{$task['id']}})">
                                                 </span>
                                             <span data-toggle="tooltip" data-placement="top" title="Завершить задачу">
-                                            <ion-icon name="ios-checkbox-outline" aria-hidden="true"
-                                                      onclick="endTask({{$task['id']}})"></ion-icon>
+                                                <img aria-hidden="true"
+                                                     src="https://tasks.pkirillw.ru/public/images/outline-done_outline-24px.svg"
+                                                     onclick="endTask({{$task['id']}})">
                                                     </span>
                                         </div>
 
@@ -215,18 +212,13 @@
                                placeholder="№123456">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Позиция</label>
-                        <input type="number" name="position" class="form-control" id="exampleInputEmail1"
-                               placeholder="0">
-                    </div>
-                    <div class="form-group">
                         <label for="exampleInputEmail1">Комментарий</label>
                         <textarea name="comment" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="exampleInputEmail1">Время окончания задачи</label>
                         <div class="input-group mb-3">
-                            <input name="complite_till" type='text' id='datetimepicker1' он class="form-control"
+                            <input name="complite_till" type='text' id='datetimepicker1' class="form-control"
                                    aria-describedby="basic-addon2">
                             <div class="input-group-append">
                                 <span class="input-group-text" id="basic-addon2"><span
@@ -244,21 +236,52 @@
     </div>
 </div>
 
-<div class="modal fade" id="changeTimer" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+
+
+<div class="modal fade" id="changeStatus" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
      aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Изменение таймера</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Редактирование задачи <span id="edit_nameTask_header">TEST</span>
+                </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form role="form" action="/tasks/changeTimer" method="post">
+                <h2 class="text-center">Редактирование дела <span id="edit_nameTask">TEST</span></h2>
+                <form role="form" action="/tasks/edit" method="post">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="user_id" value="{{$user['id']}}">
-                    <input type="hidden" name="task_id" id="task_id_timer" value="">
+                    <input type="hidden" name="task_id" value="" id="edit_taskId">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Воронка</label>
+                        <select name="pipeline_id" id="edit_pipelineId" class="form-control">
+                            <option value="1">Качество запроса</option>
+                            <option value="2">Назначен поставщик</option>
+                            <option value="3">На контроль</option>
+                            <option value="4">Выполнен</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Цвет задачи</label>
+                        <select name="type_id" id="edit_typeId" class="form-control">
+                            <option style="background: #ff0000; color: #000;" value="1">Красный</option>
+                            <option style="background: #ffc000; color: #000;" value="2">Желтый</option>
+                            <option style="background: #92d050; color: #000;" value="3">Зеленый</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Наименование задачи</label>
+                        <input type="text" name="number_request" class="form-control" id="edit_numberRequest"
+                               placeholder="№123456">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Комментарий</label>
+                        <textarea name="comment" id="edit_comment" class="form-control" rows="3"></textarea>
+                    </div>
                     <div class="form-group">
                         <label for="exampleInputEmail1">Время окончания задачи</label>
                         <div class="input-group mb-3">
@@ -269,38 +292,6 @@
                                             class="ion-calendar"></span></span>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary">Отправить</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="changeStatus" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Смена статуса</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form role="form" action="/tasks/changeStatus" method="post">
-                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="user_id" value="{{$user['id']}}">
-                    <input type="hidden" name="task_id" id="task_id_status" value="">
-                    <div class="form-group">
-                        <label for="exampleInputEmail1">Цвет задачи</label>
-                        <select name="type_id" class="form-control">
-                            <option style="background: #ff0000; color: #000;" value="1">Красный</option>
-                            <option style="background: #ffc000; color: #000;" value="2">Желтый</option>
-                            <option style="background: #92d050; color: #000;" value="3">Зеленый</option>
-                        </select>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Отправить</button>

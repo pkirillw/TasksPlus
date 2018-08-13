@@ -1,10 +1,13 @@
 $(function () {
-    $('#datetimepicker1').datetimepicker({
-        locale: 'ru'
+    $('#datetimepicker1').datepicker({
+        format: "dd.mm.yyyy",
+        language: "ru"
     });
-    $('#datetimepicker2').datetimepicker({
-        locale: 'ru'
+    $('#datetimepicker2').datepicker({
+        format: "dd.mm.yyyy",
+        language: "ru"
     });
+
     $('[data-toggle="tooltip"]').tooltip();
     var kanbanCol = $('.pipeline-body');
     //kanbanCol.css('max-height', (window.innerHeight - 150) + 'px');
@@ -36,8 +39,7 @@ $(function () {
         }).done(function (data) {
             $("#innerLoaderLeads").width('100%');
             $.each(data, function (key, value) {
-                if (key == 0)
-                {
+                if (key == 0) {
                     $('input[name="number_request"]').val(value.name);
                 }
                 $('#lead_select')
@@ -54,7 +56,7 @@ $(function () {
             }, 500);
 
         });
-        $('#lead_select').change( function () {
+        $('#lead_select').change(function () {
             $('input[name="number_request"]').val($("#lead_select option:selected").text());
         });
     });
@@ -128,9 +130,21 @@ function saveText(id) {
     });
 }
 
-function changeStatusTaskId(id) {
-    console.log(id);
-    $('#task_id_status').val(id);
+function editTask(id) {
+    $.ajax({
+        type: 'GET',
+        url: '/tasks/getTaskAPI/' + id,
+    }).done(function (data) {
+        $('#edit_nameTask_header').text(data.number_request);
+        $('#edit_nameTask').text(data.number_request);
+        $('#edit_taskId').val(data.id);
+        $('#edit_pipelineId').val(data.pipeline.id);
+        $('#edit_typeId').val(data.type.id);
+        $('#edit_numberRequest').val(data.number_request);
+        $('#edit_comment').text(data.comment);
+        $('#datetimepicker2').val(data.complite_till_format);
+    })
+
 }
 
 function changeTimerTaskId(id) {
